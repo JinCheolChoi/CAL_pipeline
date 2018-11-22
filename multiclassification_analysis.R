@@ -2,61 +2,59 @@
 # empty the workspace
 #####################
 rm(list=ls())
-set.seed(2002)
+
 #######################
 # directory & file name
 #######################
-# # ### Jinwan
-# ### data
-# data_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
-# ### function
-# code_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
-
-# ### JinCheol
+# ### Jinwan
 ### data
-data_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
-code_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
-
-# data_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/Kaggle/Google Analytics Customer Revenue Prediction/R code/ML_pipeline/'
-# code_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/Kaggle/Google Analytics Customer Revenue Prediction/R code/ML_pipeline/'
-
+# data_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
+# code_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
+# ### JinCheol
+data_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
+code_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
+# data name
 data_tr <- 'training_data.csv'
 data_te <- 'test_data.csv'
 
-##################
-# load functions
-##################
-source(paste0(code_loc, 'required_packages.R'))
-source(paste0(code_loc, 'XGB_functions_pipeline.R'))
-source(paste0(code_loc, 'RF_functions_pipeline.R'))
-
 #############
-# Read data & modification
+# pre-setting
 #############
-mtrain <- read.csv(paste0(data_loc, data_tr))
-# mtest <- read.csv(paste0(data_loc, data_te))
-mtrain <- mtrain[1:1000, 2:19]
-mtrain$Claim.Class <- mtrain$Claim.Class - 1
-res_pos <- 18
-numOfCV <- 3
-R <- 5
-# class.type <- "regression"
-class.type <- "classification"
-
-##################################
-# initialize MSEP and MSE matirx
-##################################
-evalMetrics <- lossFunction(class.type)
-lasso.family.type <- ifelse(class.type=="classification", "multinomial", "gaussian")
-predict.response.type <- ifelse(class.type=="classification", "class", "response")
-Methods <- c(
+res_pos <- 18                     # column index of response variable
+numOfCV <- 3                      # numOfCV = k of k-fold cross validation
+R <- 5                            # number of runs of the most outer loop
+class.type <- "classification"    # analysis type
+#class.type <- "regression"
+Methods <- c(                     # methods to implement
   # "LASSOMIN", "LASSO1SE",
   "RF",
   "XGB",
   # "SVM/Linear",
   "SVM_Radial"
   # "SVM_Sigmoid"
-  )
+)
+
+################
+# load functions
+################
+source(paste0(code_loc, 'required_packages.R'))
+source(paste0(code_loc, 'RF_functions_pipeline.R'))
+source(paste0(code_loc, 'XGB_functions_pipeline.R'))
+
+##########################
+# Read data & modification
+##########################
+mtrain <- read.csv(paste0(data_loc, data_tr))
+# mtest <- read.csv(paste0(data_loc, data_te))
+mtrain <- mtrain[1:100, 2:19]
+mtrain$Claim.Class <- mtrain$Claim.Class - 1
+
+################################
+# initialize MSEP and MSE matirx
+################################
+evalMetrics <- lossFunction(class.type)
+lasso.family.type <- ifelse(class.type=="classification", "multinomial", "gaussian")
+predict.response.type <- ifelse(class.type=="classification", "class", "response")
 insample.error <- matrix(NA, nrow=R, ncol=length(Methods))
 colnames(insample.error) <- Methods
 outsample.error <- matrix(NA, nrow=R, ncol=length(Methods))
@@ -76,9 +74,9 @@ rf.parameter_choices <- expand.grid(ntree=ntree,
                                  mtry=mtry,
                                  nodesize=nodesize)
 
-####################################################
+#######################
 # XGB parameter choices
-####################################################
+#######################
 ### create matrix to keep track the best parameters for each round of R
 xgb.best.params <- matrix(NA, nrow=R, ncol=14) %>% as.data.frame()
 colnames(xgb.best.params) <- c("R#", "booster", "objective", "eval_metric", 
@@ -86,7 +84,7 @@ colnames(xgb.best.params) <- c("R#", "booster", "objective", "eval_metric",
                                "max_depth", "min_child_weight", "subsample",
                                "colsample_bytree", "nrounds", "silent")
 
-eta_values              <- c(0.1, 0.3)      # defalut: 0.3
+eta_values              <- c(0.1, 0.3)         # defalut: 0.3
 gamma_values            <- c(0, 100)   
 alpha_values            <- c(0, 30)            # defalut: 0
 lambda_values           <- c(0, 30)            # defalut: 0
@@ -116,9 +114,9 @@ parameter_choices <- expand.grid(eta = 0.3,
                                  nrounds = 10
 )
 
-####################################################
+#######################
 # SVM parameter choices
-####################################################
+#######################
 ### create matrix to keep track the best parameters for each round of R
 svm.radial.best.params <- matrix(NA, nrow=R, ncol=3)
 colnames(svm.radial.best.params) <- c("R#", "gamma", "cost")
@@ -138,9 +136,10 @@ svm.pc <- list(gamma=svm.gamma.values,
                cost=svm.cost.values,
                coef0=svm.coef0.values) 
 
-r=1
-counter=1
-for ( r in (1:R) ){
+################
+# main algorithm
+################
+for(r in 1:R){
   new <- ifelse(runif(n=nrow(mtrain))<=.75, yes=1, no=2)
   train <- mtrain[which(new==1),]               # training set
   test <- mtrain[which(new==2),]                # test set
@@ -156,7 +155,6 @@ for ( r in (1:R) ){
   test.X.dummies.scaled[is.na(test.X.dummies.scaled)] <- 0
   
   # divide x and y
-  colnames(mtrain)[res_pos]
   train.y <- train[,res_pos]                          # training set y
   train.X <- train[,-res_pos]                         # training set x
   test.y <- test[,res_pos]                            # test set y
@@ -165,7 +163,7 @@ for ( r in (1:R) ){
   ##################
   # LASSO / LASSOMIN
   ##################
-  if (length(setdiff(c("LASSOMIN", "LASSO1SE"),colnames(outsample.error)))==0){
+  if(length(setdiff(c("LASSOMIN", "LASSO1SE"),colnames(outsample.error)))==0){
     cv.lasso.1 <- cv.glmnet(y=changeToFactor(class.type, train.y), 
                             x=train.X.dummies.scaled, 
                             nfolds=numOfCV,
@@ -192,32 +190,32 @@ for ( r in (1:R) ){
     print(paste0("<LASSO1SE - Done> R:", r))
   }
   
-  #######
-  # RF
-  #######
-  if (length(setdiff(c("RF"),colnames(outsample.error)))==0){
+  ###############
+  # Random Forest
+  ###############
+  if(length(setdiff(c("RF"),colnames(outsample.error)))==0){
     rf.output=randomForestBest(x=train.X, y=changeToFactor(class.type, train.y),
                                pc=rf.parameter_choices,
                                class.type=class.type,
                                nfolds=numOfCV)
     rf.best=rf.output$model
-    rf.best.params[counter,1] = r
-    rf.best.params[counter,2:4] = c(rf.output$best_ntree,
-                                    rf.output$best_mtry,
-                                    rf.output$best_nodesize)
+    rf.best.params[r,1] = r
+    rf.best.params[r,2:4] = c(rf.output$best_ntree,
+                              rf.output$best_mtry,
+                              rf.output$best_nodesize)
     predict.tr <- predict(rf.best, newdata=train.X) %>% as.vector() %>% as.numeric()
     predict.te <- predict(rf.best, newdata=test.X) %>% as.vector() %>% as.numeric()
-    
     
     insample.error[r, which(Methods=="RF")] <- evalMetrics(train.y, predict.tr) #sMSE
     outsample.error[r, which(Methods=="RF")] <- evalMetrics(test.y, predict.te) #MSPE
     # interim process message
     print(paste0("<RF - Done> R:", r))
   }
-  ################
-  # XGB
-  ################
-  if (length(setdiff(c("XGB"),colnames(outsample.error)))==0){
+  
+  #########
+  # XGBoost
+  #########
+  if(length(setdiff(c("XGB"),colnames(outsample.error)))==0){
     xgb.best <- xgb_GridToBest(train_X=train.X,
                                train_y=train.y, 
                                parameter_choices=parameter_choices, 
@@ -234,8 +232,7 @@ for ( r in (1:R) ){
       select(-col_diff) %>% 
       as.matrix()  %>% 
       t()
-      
-      
+    
     predict.tr <- predict(xgb.best, newdata=toXgbMatrix(train.X, NULL ,class.type))
     predict.te <- predict(xgb.best, newdata=toXgbMatrix(test.X, NULL ,class.type))
     
@@ -245,19 +242,20 @@ for ( r in (1:R) ){
     print(paste0("<XGB - Done> R:", r))
   }
   
-  ###############
+  ############
   # SVM_Linear
-  ################
-  # caret.svmLinear.tuning <- train(x=train.X.dummies.scaled,
-  #                                 y=changeToFactor(class.type, train.y),
-  #                                 method="svmLinear",
-  #                                 tuneLength=10,
-  #                                 trControl = trainControl(method = "cv", number=numOfCV))
-
-  ###############
+  ############
+  if(length(setdiff(c("SVM_Linear"),colnames(outsample.error)))==0){
+    caret.svmLinear.tuning <- train(x=train.X.dummies.scaled,
+                                    y=changeToFactor(class.type, train.y),
+                                    method="svmLinear",
+                                    tuneLength=10,
+                                    trControl = trainControl(method = "cv", number=numOfCV))
+  }
+  ############
   # SVM_Radial
-  ################
-  if (length(setdiff(c("SVM_Radial"),colnames(outsample.error)))==0){
+  ############
+  if(length(setdiff(c("SVM_Radial"),colnames(outsample.error)))==0){
     caret.svmRadial.tuning <- train(x=train.X.dummies.scaled,
                                     y=changeToFactor(class.type, train.y),
                                     method="svmRadialSigma",
@@ -283,10 +281,11 @@ for ( r in (1:R) ){
     # interim process message
     print(paste0("<SVM_Raidal - Done> R:", r))
   }
-  ################
+  
+  #############
   # SVM_Sigmoid
-  ################
-  if (length(setdiff(c("SVM_Sigmoid"),colnames(outsample.error)))==0){
+  #############
+  if(length(setdiff(c("SVM_Sigmoid"),colnames(outsample.error)))==0){
     svm.sigmoid <-  tune.svm(y=changeToFactor(class.type, train.y),
                              x=train.X.dummies.scaled, 
                              scale=FALSE,
