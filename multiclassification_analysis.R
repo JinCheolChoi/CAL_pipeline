@@ -8,11 +8,12 @@ rm(list=ls())
 #######################
 # ### Jinwan
 ### data
-# data_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
-# code_loc <- 'C:/Users/jin89/Downloads/Kaggle/ML_pipeline_v2/'
+
+data_loc <- 'C:/Users/jin89/Desktop/Github/CAL_pipeline/'
+code_loc <- 'C:/Users/jin89/Desktop/Github/CAL_pipeline/'
 # ### JinCheol
-data_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
-code_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
+# data_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
+# code_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
 # data name
 data_tr <- 'training_data.csv'
 data_te <- 'test_data.csv'
@@ -27,10 +28,10 @@ class.type <- "classification"    # analysis type
 #class.type <- "regression"
 Methods <- c(                     # methods to implement
   # "LASSOMIN", "LASSO1SE",
-  "RF",
-  "XGB",
+  # "RF",
+  "XGB"
   # "SVM/Linear",
-  "SVM_Radial"
+  # "SVM_Radial"
   # "SVM_Sigmoid"
 )
 
@@ -260,6 +261,7 @@ for(r in 1:R){
                                     y=changeToFactor(class.type, train.y),
                                     method="svmRadialSigma",
                                     # preProcess=NULL,
+                                    scale=FALSE,
                                     tuneLength=10,
                                     trControl = trainControl(method = "cv", number=numOfCV))
     caret.gamma <- 1/(2*(caret.svmRadial.tuning$bestTune$sigma)^2)

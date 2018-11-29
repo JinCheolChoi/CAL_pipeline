@@ -40,6 +40,7 @@ xgb_gridsearch <- function(pc, xgbMatrix, class.type, nclass, nfolds){
   # parameters: early stopping = 200
   ####################################################
   params.reg <- list(booster = "gbtree",
+                     nthread = 4,
                      objective = "reg:linear",
                      eval_metric = "rmse",
                      eta = pc$eta,
@@ -53,6 +54,7 @@ xgb_gridsearch <- function(pc, xgbMatrix, class.type, nclass, nfolds){
                      nrounds = pc$nrounds)
   
   params.class <- list(booster = "gbtree",
+                       nthread = 4,
                        objective = "multi:softmax",
                        eval_metric = "mlogloss",
                        num_class = nclass,
@@ -143,31 +145,33 @@ xgb_GridToBest <- function(train_X, train_y, parameter_choices,
   #             early stopping = 200
   ####################################################
   p.reg <- list(booster = "gbtree",
-            objective = "reg:linear",
-            eval_metric = "rmse",
-            eta = best_pc$eta,
-            gamma = best_pc$gamma,
-            alpha = best_pc$alpha,
-            lambda = best_pc$lambda,
-            max_depth = best_pc$max_depth,
-            min_child_weight = best_pc$min_child_weight,
-            subsample = best_pc$subsample,
-            colsample_bytree = best_pc$colsample_bytree,
-            nrounds=best_pc$nrounds)
+                nthread = 4,
+                objective = "reg:linear",
+                eval_metric = "rmse",
+                eta = best_pc$eta,
+                gamma = best_pc$gamma,
+                alpha = best_pc$alpha,
+                lambda = best_pc$lambda,
+                max_depth = best_pc$max_depth,
+                min_child_weight = best_pc$min_child_weight,
+                subsample = best_pc$subsample,
+                colsample_bytree = best_pc$colsample_bytree,
+                nrounds=best_pc$nrounds)
   
   p.class <- list(booster = "gbtree",
-            objective = "multi:softmax",
-            eval_metric = "mlogloss",
-            num_class = nclass,
-            eta = best_pc$eta,
-            gamma = best_pc$gamma,
-            alpha = best_pc$alpha,
-            lambda = best_pc$lambda,
-            max_depth = best_pc$max_depth,
-            min_child_weight = best_pc$min_child_weight,
-            subsample = best_pc$subsample,
-            colsample_bytree = best_pc$colsample_bytree,
-            nrounds=best_pc$nrounds)
+                  nthread = 4,
+                  objective = "multi:softmax",
+                  eval_metric = "mlogloss",
+                  num_class = nclass,
+                  eta = best_pc$eta,
+                  gamma = best_pc$gamma,
+                  alpha = best_pc$alpha,
+                  lambda = best_pc$lambda,
+                  max_depth = best_pc$max_depth,
+                  min_child_weight = best_pc$min_child_weight,
+                  subsample = best_pc$subsample,
+                  colsample_bytree = best_pc$colsample_bytree,
+                  nrounds=best_pc$nrounds)
   if ( class.type == "regression" ){
     p <- p.reg
   }
