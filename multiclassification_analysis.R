@@ -23,12 +23,12 @@ R <- 5                            # number of runs of the most outer loop
 class.type <- "classification"    # analysis type
 #class.type <- "regression"
 Methods <- c(                     # methods to implement
-  # "LASSOMIN", "LASSO1SE",
+  "LASSOMIN", "LASSO1SE",
   "RF",
-  "XGB"
-  # "SVM/Linear",
-  # "SVM_Radial"
-  # "SVM_Sigmoid"
+  "XGB",
+  "SVM_Linear",
+  "SVM_Radial",
+  "SVM_Sigmoid"
 )
 
 ################
@@ -115,6 +115,8 @@ parameter_choices <- expand.grid(eta = 0.3,
 # SVM parameter choices
 #######################
 ### create matrix to keep track the best parameters for each round of R
+svm.linear.best.params <- matrix(NA, nrow=R, ncol=2)
+colnames(svm.linear.best.params) <- c("R#", "cost")
 svm.radial.best.params <- matrix(NA, nrow=R, ncol=3)
 colnames(svm.radial.best.params) <- c("R#", "gamma", "cost")
 svm.sigmoid.best.params <- matrix(NA, nrow=R, ncol=4)
@@ -243,41 +245,53 @@ for(r in 1:R){
   # SVM_Linear
   ############
   if(length(setdiff(c("SVM_Linear"),colnames(outsample.error)))==0){
-    caret.svmLinear.tuning <- train(x=train.X.dummies.scaled,
-                                    y=changeToFactor(class.type, train.y),
-                                    method="svmLinear",
-                                    tuneLength=10,
-                                    trControl = trainControl(method = "cv", number=numOfCV))
+    # caret.svmLinear.tuning <- train(x=train.X.dummies.scaled,
+    #                                 y=changeToFactor(class.type, train.y),
+    #                                 method="svmLinear",
+    #                                 tuneLength=10,
+    #                                 trControl = trainControl(method = "cv", number=numOfCV))
+    svm.linear <-  tune.svm(y=changeToFactor(class.type, train.y),
+                            x=train.X.dummies.scaled, 
+                            scale=FALSE,
+                            kernal="linear", 
+                            cost = svm.pc$cost,
+                            tunecontrol = tune.control(sampling=svm.sampling, cross=numOfCV)) 
+    svm.linear$best.parameters
+    svm.linear.best.params[r, 1] <- r
+    svm.linear.best.params[r, 2] <- svm.linear$best.parameters %>% as.matrix()
+    predict.tr <- 
+      predict(svm.linear$best.model, newdata=train.X.dummies.scaled) %>% as.vector() %>% as.numeric()
+    predict.te <- 
+      predict(svm.linear$best.model, newdata=test.X.dummies.scaled)  %>% as.vector() %>% as.numeric()
+    insample.error[r, which(Methods=="SVM_Linear")] <- evalMetrics(train.y, predict.tr)
+    outsample.error[r, which(Methods=="SVM_Linear")] <- evalMetrics(test.y, predict.te)
+    # interim process message
+    print(paste0("<SVM_Linear - Done> R:", r))
+    
   }
+  
   ############
   # SVM_Radial
   ############
   if(length(setdiff(c("SVM_Radial"),colnames(outsample.error)))==0){
-    caret.svmRadial.tuning <- train(x=train.X.dummies.scaled,
-                                    y=changeToFactor(class.type, train.y),
-                                    method="svmRadialSigma",
-                                    # preProcess=NULL,
-                                    scale=FALSE,
-                                    tuneLength=10,
-                                    trControl = trainControl(method = "cv", number=numOfCV))
-    caret.gamma <- 1/(2*(caret.svmRadial.tuning$bestTune$sigma)^2)
-    caret.cost <- caret.svmRadial.tuning$bestTune$C
-    
-    caret.best.svm <- svm(y=changeToFactor(class.type, train.y), 
-                          x=train.X.dummies.scaled, scale=FALSE,
-                          kernal="radial", 
-                          gamma = caret.gamma, 
-                          cost = caret.cost) 
+    svm.radial <-  tune.svm(y=changeToFactor(class.type, train.y),
+                            x=train.X.dummies.scaled, 
+                            scale=FALSE,
+                            kernal="radial", 
+                            gamma = svm.pc$gamma, 
+                            cost = svm.pc$cost, 
+                            tunecontrol = tune.control(sampling=svm.sampling, cross=numOfCV)) 
     svm.radial.best.params[r, 1] <- r
-    svm.radial.best.params[r, 2:3] <- c(gamma=caret.gamma, cost=caret.cost) %>% as.matrix()
+    svm.radial.best.params[r, 2:3] <- svm.radial$best.parameters %>% as.matrix()
     predict.tr <- 
-      predict(caret.best.svm, newdata=train.X.dummies.scaled) %>% as.vector() %>% as.numeric()
+      predict(svm.radial$best.model, newdata=train.X.dummies.scaled) %>% as.vector() %>% as.numeric()
     predict.te <- 
-      predict(caret.best.svm, newdata=test.X.dummies.scaled) %>% as.vector() %>% as.numeric()
+      predict(svm.radial$best.model, newdata=test.X.dummies.scaled)  %>% as.vector() %>% as.numeric()
     insample.error[r, which(Methods=="SVM_Radial")] <- evalMetrics(train.y, predict.tr)
     outsample.error[r, which(Methods=="SVM_Radial")] <- evalMetrics(test.y, predict.te)
     # interim process message
-    print(paste0("<SVM_Raidal - Done> R:", r))
+    print(paste0("<SVM_Radial - Done> R:", r))
+    
   }
   
   #############
@@ -313,7 +327,7 @@ for(r in 1:R){
 # All methods sqrt(MSPE) Box plot
 #################################
 par(mfrow=c(1,1))
-boxplot(sqrt(insample.error), las=2, main="Test Error (sqrt(MSPE))")
+boxplot(sqrt(insample.error), las=2, main="Test Error (sqrt(sMSE))")
 boxplot(sqrt(outsample.error), las=2, main="Test Error (sqrt(MSPE))")
 
 ##########################################
