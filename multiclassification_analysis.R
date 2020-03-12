@@ -313,18 +313,18 @@ for(r in 1:R){
 # All methods sqrt(MSPE) Box plot
 #################################
 par(mfrow=c(1,1))
-boxplot(sqrt(i), las=2, main="Test Error (sqrt(sMSE))")
-boxplot(sqrt(pred.misclass.mat), las=2, main="Test Error (sqrt(MSPE))")
+boxplot(sqrt(insample.error), las=2, main="Test Error (sqrt(MSPE))")
+boxplot(sqrt(outsample.error), las=2, main="Test Error (sqrt(MSPE))")
 
 ##########################################
 # All methods rescaled sqrt(MSPE) Box plot
 ##########################################
-apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
+apply(X=outsample.error, MARGIN=1, FUN=min)
 # Divide all errors for a given split by this minimum
-pred.misclass.mat.scaled=pred.misclass.mat/apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
+outsample.error.scaled=outsample.error/apply(X=outsample.error, MARGIN=1, FUN=min)
 # Box Plot
 par(mfrow=c(1,1))
-# boxplot(sqrt(pred.misclass.mat), las=2, main="Misclassification error \n (sqrt(1 - Correct rate))")
-boxplot(sqrt(pred.misclass.mat.scaled), las=2, main="Misclassfication error \n re-scaled(sqrt(1 - Correct rate))")
+# boxplot(sqrt(outsample.error), las=2, main="Misclassification error \n (sqrt(1 - Correct rate))")
+boxplot(sqrt(outsample.error.scaled), las=2, main="Misclassfication error \n re-scaled(sqrt(1 - Correct rate))")
 
 
