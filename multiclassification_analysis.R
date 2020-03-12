@@ -19,11 +19,12 @@ data_te <- 'test_data.csv'
 #############
 res_pos <- 18                     # column index of response variable
 numOfCV <- 3                      # numOfCV = k of k-fold cross validation
-R <- 5                            # number of runs of the most outer loop
-class.type <- "classification"    # analysis type
-#class.type <- "regression"
+R <- 3                            # number of runs of the most outer loop
+#class.type <- "classification"    # analysis type
+class.type <- "regression"
 Methods <- c(                     # methods to implement
-  "LASSOMIN", "LASSO1SE",
+  "LASSOMIN",
+  "LASSO1SE",
   "RF",
   "XGB",
   "SVM_Linear",
@@ -43,7 +44,7 @@ source(paste0(code_loc, 'XGB_functions_pipeline.R'))
 ##########################
 mtrain <- read.csv(paste0(data_loc, data_tr))
 # mtest <- read.csv(paste0(data_loc, data_te))
-mtrain <- mtrain[1:100, 2:19]
+mtrain <- mtrain[1:200, 2:19]
 mtrain$Claim.Class <- mtrain$Claim.Class - 1
 
 ################################
@@ -68,8 +69,8 @@ ntree = c(50, 250, 500, 800, 1000)
 mtry = seq(1, p, by = 5)                     # The number of variables at each split
 nodesize = c(5, seq(10, 150, by = 30))       # Minimum size of terminal nodes
 rf.parameter_choices <- expand.grid(ntree=ntree,
-                                 mtry=mtry,
-                                 nodesize=nodesize)
+                                    mtry=mtry,
+                                    nodesize=nodesize)
 
 #######################
 # XGB parameter choices
@@ -228,7 +229,7 @@ for(r in 1:R){
     xgb.best.params[r,2:14] <-
       (xgb.best$params) %>% 
       as.data.frame() %>% 
-      select(-col_diff) %>% 
+      dplyr::select(-col_diff) %>% 
       as.matrix()  %>% 
       t()
     
@@ -318,7 +319,6 @@ for(r in 1:R){
     print(paste0("<SVM_Sigmoid - Done> R:", r))
   }
 }
-
 
 ######################
 # Combine the matrices
