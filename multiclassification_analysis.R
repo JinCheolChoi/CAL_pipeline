@@ -1,19 +1,15 @@
 #####################
 # empty the workspace
-#####################  s
+#####################
 rm(list=ls())
 
 #######################
 # directory & file name
 #######################
-# ### Jinwan
 ### data
+data_loc <- 'C:/Users/JinCheol Choi/Desktop/R/Functions/CAL_pipeline/'
+code_loc <- 'C:/Users/JinCheol Choi/Desktop/R/Functions/CAL_pipeline/'
 
-data_loc <- 'C:/Users/jin89/Desktop/Github/CAL_pipeline/'
-code_loc <- 'C:/Users/jin89/Desktop/Github/CAL_pipeline/'
-# ### JinCheol
-# data_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
-# code_loc <- 'C:/Users/JinCheol Choi/Desktop/My Folder/GitHub/JinCheolChoi/CAL_pipeline/'
 # data name
 data_tr <- 'training_data.csv'
 data_te <- 'test_data.csv'
@@ -28,7 +24,7 @@ class.type <- "classification"    # analysis type
 #class.type <- "regression"
 Methods <- c(                     # methods to implement
   # "LASSOMIN", "LASSO1SE",
-  # "RF",
+  "RF",
   "XGB"
   # "SVM/Linear",
   # "SVM_Radial"
@@ -310,26 +306,25 @@ for(r in 1:R){
 }
 
 
+######################
+# Combine the matrices
+######################
+#################################
+# All methods sqrt(MSPE) Box plot
+#################################
+par(mfrow=c(1,1))
+boxplot(sqrt(i), las=2, main="Test Error (sqrt(sMSE))")
+boxplot(sqrt(pred.misclass.mat), las=2, main="Test Error (sqrt(MSPE))")
 
-# ######################
-# # Combine the matrices
-# ######################
-# #################################
-# # All methods sqrt(MSPE) Box plot
-# #################################
-# par(mfrow=c(1,1))
-# boxplot(sqrt(i), las=2, main="Test Error (sqrt(sMSE))")
-# boxplot(sqrt(pred.misclass.mat), las=2, main="Test Error (sqrt(MSPE))")
-# 
-# ##########################################
-# # All methods rescaled sqrt(MSPE) Box plot
-# ##########################################
-# apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
-# # Divide all errors for a given split by this minimum
-# pred.misclass.mat.scaled=pred.misclass.mat/apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
-# # Box Plot
-# par(mfrow=c(1,1))
-# # boxplot(sqrt(pred.misclass.mat), las=2, main="Misclassification error \n (sqrt(1 - Correct rate))")
-# boxplot(sqrt(pred.misclass.mat.scaled), las=2, main="Misclassfication error \n re-scaled(sqrt(1 - Correct rate))")
-# 
+##########################################
+# All methods rescaled sqrt(MSPE) Box plot
+##########################################
+apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
+# Divide all errors for a given split by this minimum
+pred.misclass.mat.scaled=pred.misclass.mat/apply(X=pred.misclass.mat, MARGIN=1, FUN=min)
+# Box Plot
+par(mfrow=c(1,1))
+# boxplot(sqrt(pred.misclass.mat), las=2, main="Misclassification error \n (sqrt(1 - Correct rate))")
+boxplot(sqrt(pred.misclass.mat.scaled), las=2, main="Misclassfication error \n re-scaled(sqrt(1 - Correct rate))")
+
 

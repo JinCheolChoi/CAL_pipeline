@@ -12,9 +12,13 @@ checkpackages<-function(package){
 # Required Packages
 lapply(c("MASS", "nnet", "glmnet", "e1071", "klaR", "car", "class",
          "sm", "rpart.plot", "randomForest", "gbm", "caret", "rpart",
-         "mice", "scales", "dplyr",'ElemStatLearn', "h2o",
+         "mice", "scales", "dplyr", 
+         #'ElemStatLearn', 
+         "h2o",
          "RColorBrewer", "rattle","data.table",
-         "jsonlite", "zoo", "stringr","lightgbm","Matrix"), checkpackages)
+         "jsonlite", "zoo", "stringr",
+         #"lightgbm",
+         "Matrix"), checkpackages)
 
 lapply(c("Rmisc",
          "countrycode",
