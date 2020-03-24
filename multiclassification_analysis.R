@@ -7,8 +7,8 @@ rm(list=ls())
 # directory & file name
 #######################
 ### data
-data_loc <- 'C:/Users/JinCheol Choi/Desktop/R/Functions/CAL_pipeline/'
-code_loc <- 'C:/Users/JinCheol Choi/Desktop/R/Functions/CAL_pipeline/'
+data_loc <- 'C:/Users/JinCheol Choi/Desktop/R/CAL_pipeline/'
+code_loc <- 'C:/Users/JinCheol Choi/Desktop/R/CAL_pipeline/'
 
 # data name
 data_tr <- 'training_data.csv'
